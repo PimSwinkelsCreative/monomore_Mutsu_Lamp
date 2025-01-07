@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#define LONGPRESSTIME 1000
+#define LONGPRESSTIME 2000
 #define DOUBLECLICKINTERVAL 200
 
 #define DEBOUNCETIME 10

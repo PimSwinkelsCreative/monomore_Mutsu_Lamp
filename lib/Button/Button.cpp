@@ -49,7 +49,8 @@ void Button::update() {
     shortPressDetected = false;
   }
 
-  if (state && millis() - timePressed > DOUBLECLICKINTERVAL) {
+  uint32_t currentButtonPressLentgh = millis() - timePressed;
+  if (state && currentButtonPressLentgh > DOUBLECLICKINTERVAL&& currentButtonPressLentgh<(millis() - timeReleased)) {
     input = LONGPRESS;
   }
 
@@ -70,5 +71,6 @@ void Button::update() {
 void Button::clearInput() {
   shortPressDetected = false;
   doubleClickStarted = false;
+  timeReleased = millis();
   input = NONE;
 }

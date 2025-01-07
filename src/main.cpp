@@ -22,15 +22,17 @@ states prevState = LED_3;
 uint32_t lastButtonaction = 0;
 uint32_t buttonTimeoutInterval = 3000; // 10 seconds
 
+// colors:
+colorPalette currentColor;
+
 void setup()
 {
     delay(3000);
     Serial.begin(115200);
     setupLeds();
-    setBrighthess(1000);
-    setWhiteLedIntensity(1000);
-    setRGBWLedColor(RGBWColor16(1000, 500, 0, 1500));
     updateLeds();
+    setDayColorPalette();
+    currentColor = DAY;
 }
 
 void loop()
@@ -121,6 +123,26 @@ void loop()
         break;
     }
 
+    if (state != prevState) {
+        Serial.println("going to state: " + String(state));
+    }
+
     // // functions that need to be updated periodically:
     topButton.update();
+
+    // check if the color palette needs to change:
+    if (topButton.input == LONGPRESS) {
+        if (currentColor == DAY) {
+            Serial.println("Going to Night Mode");
+            setNightColorPalette();
+            currentColor = NIGHT;
+        } else {
+            setDayColorPalette();
+            Serial.println("Going to Day Mode");
+            currentColor = DAY;
+        }
+        lastButtonaction = millis();
+        updateLeds();
+        topButton.clearInput();
+    }
 }

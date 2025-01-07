@@ -2,7 +2,15 @@
 
 #include "pinout.h"
 
-// #define DEBUG_LED_MAPPING
+#define DEBUG_LED_MAPPING
+
+// color palettes:
+// Day mode:
+uint16_t dayWhiteLevel = 2000;
+RGBWColor16 dayRGBWColor = RGBWColor16(2000, 1000, 0, 3000);
+// night mode:
+uint16_t nightWhiteLevel = 100;
+RGBWColor16 nightRGBWColor = RGBWColor16(4095, 1000, 0, 500);
 
 RGBWColor16 rgbwLeds[N_RGBWLEDS];
 uint16_t whiteLeds[N_WHITE_LEDS];
@@ -15,7 +23,8 @@ uint16_t maxBrightness = 0xFFF;
 // The led array needs to be initialized prior to this object creation
 TLC5947 ledDriver(leds, sizeof(leds) / sizeof(leds[0]), LED_SCLK, LED_SIN, LED_LATCH, LED_BLANK);
 
-void setBrighthess(uint16_t brightness){
+void setBrighthess(uint16_t brightness)
+{
     maxBrightness = brightness;
     updateLeds();
 }
@@ -33,6 +42,18 @@ void setupLeds()
 
     // start the 24V supply:
     enableLedSupply(true);
+}
+
+void setDayColorPalette()
+{
+    setWhiteLedIntensity(dayWhiteLevel);
+    setRGBWLedColor(dayRGBWColor);
+}
+
+void setNightColorPalette()
+{
+    setWhiteLedIntensity(nightWhiteLevel);
+    setRGBWLedColor(nightRGBWColor);
 }
 
 void setWhiteLedIntensity(uint16_t intensity)
@@ -53,13 +74,13 @@ void updateLeds()
 {
     // copy all data to the global led array and scale the brightness:
     for (int i = 0; i < 4 * N_RGBWLEDS; i += 4) {
-        leds[rgbwLedPins[i]] = map(rgbwLeds[i / 4].r,0,0xFFF,0,maxBrightness);
-        leds[rgbwLedPins[i + 1]] = map(rgbwLeds[i / 4].g,0,0xFFF,0,maxBrightness);
-        leds[rgbwLedPins[i + 2]] = map(rgbwLeds[i / 4].b,0,0xFFF,0,maxBrightness);
-        leds[rgbwLedPins[i + 3]] = map(rgbwLeds[i / 4].w,0,0xFFF,0,maxBrightness);
+        leds[rgbwLedPins[i]] = map(rgbwLeds[i / 4].r, 0, 0xFFF, 0, maxBrightness);
+        leds[rgbwLedPins[i + 1]] = map(rgbwLeds[i / 4].g, 0, 0xFFF, 0, maxBrightness);
+        leds[rgbwLedPins[i + 2]] = map(rgbwLeds[i / 4].b, 0, 0xFFF, 0, maxBrightness);
+        leds[rgbwLedPins[i + 3]] = map(rgbwLeds[i / 4].w, 0, 0xFFF, 0, maxBrightness);
     }
     for (int i = 0; i < N_WHITE_LEDS; i++) {
-        leds[whiteLedPins[i]] = map(whiteLeds[i],0,0xFFF,0,maxBrightness);
+        leds[whiteLedPins[i]] = map(whiteLeds[i], 0, 0xFFF, 0, maxBrightness);
     }
 
 #ifdef DEBUG_LED_MAPPING
