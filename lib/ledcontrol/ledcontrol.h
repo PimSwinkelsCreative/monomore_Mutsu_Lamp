@@ -11,7 +11,7 @@ const uint8_t whiteLedPins[] = { 19, 14, 9, 4 };
 
 void setupLeds();
 
-void setBrighness(uint16_t brightness);
+void setBrighthess(uint16_t brightness);
 
 void setWhiteLedIntensity(uint16_t intensity);
 

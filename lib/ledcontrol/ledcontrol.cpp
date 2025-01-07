@@ -15,14 +15,14 @@ uint16_t maxBrightness = 0xFFF;
 // The led array needs to be initialized prior to this object creation
 TLC5947 ledDriver(leds, sizeof(leds) / sizeof(leds[0]), LED_SCLK, LED_SIN, LED_LATCH, LED_BLANK);
 
-void setBrighness(uint16_t brightness){
+void setBrighthess(uint16_t brightness){
     maxBrightness = brightness;
     updateLeds();
 }
 
 void setupLeds()
 {
-    // all initialisatin is done by the constructor
+    // all initialisation is done by the constructor
     // only thing tha needs to be done is nulling all values and outputting that to the driver
     setRGBWLedColor(RGBWColor16(0, 0, 0, 0));
     setWhiteLedIntensity(0);
@@ -32,7 +32,7 @@ void setupLeds()
     updateLeds();
 
     // start the 24V supply:
-    enableLedSupply();
+    enableLedSupply(true);
 }
 
 void setWhiteLedIntensity(uint16_t intensity)
