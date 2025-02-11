@@ -8,15 +8,15 @@ uint16_t delayTime = 500;
 enum states {
     STANDBY,
     FULL_ON,
-    LED_66,
-    LED_33,
-    LED_3
+    LED_40,
+    LED_10,
+    LED_1
 };
 
 Button topButton(BTN);
 
 states state = STANDBY;
-states prevState = LED_3;
+states prevState = LED_1;
 
 // timing:
 uint32_t lastButtonaction = 0;
@@ -41,7 +41,7 @@ void loop()
     switch (state) {
     case STANDBY:
         if (prevState != state) {
-            setBrighthess(0);
+            setBrighthness(0);
             enableLedSupply(false);
             updateLeds();
             prevState = state;
@@ -55,14 +55,14 @@ void loop()
         break;
     case FULL_ON:
         if (prevState != state) {
-            setBrighthess(0xFFF);
+            setBrighthness(0xFFF);
             enableLedSupply(true);
             updateLeds();
             prevState = state;
         }
         if (topButton.input == SHORTPRESS) {
             if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_66;
+                state = LED_40;
             } else {
                 state = STANDBY;
             }
@@ -70,16 +70,17 @@ void loop()
             topButton.clearInput();
         }
         break;
-    case LED_66:
+    case LED_40:
         if (prevState != state) {
-            setBrighthess(0xAAA);
+            // setBrighthness(0xAAA);
+            setBrighthness(0x666);  //40%
             enableLedSupply(true);
             updateLeds();
             prevState = state;
         }
         if (topButton.input == SHORTPRESS) {
             if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_33;
+                state = LED_10;
             } else {
                 state = STANDBY;
             }
@@ -87,16 +88,17 @@ void loop()
             topButton.clearInput();
         }
         break;
-    case LED_33:
+    case LED_10:
         if (prevState != state) {
-            setBrighthess(0x555);
+            // setBrighthness(0x555);
+            setBrighthness(0x199);  //10%
             enableLedSupply(true);
             updateLeds();
             prevState = state;
         }
         if (topButton.input == SHORTPRESS) {
             if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_3;
+                state = LED_1;
             } else {
                 state = STANDBY;
             }
@@ -104,9 +106,10 @@ void loop()
             topButton.clearInput();
         }
         break;
-    case LED_3:
+    case LED_1:
         if (prevState != state) {
-            setBrighthess(0x7A);
+            // setBrighthness(0x7A);
+            setBrighthness(0x28);   //1%
             enableLedSupply(true);
             updateLeds();
             prevState = state;
