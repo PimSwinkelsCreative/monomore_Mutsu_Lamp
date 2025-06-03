@@ -21,165 +21,187 @@ states prevState = LED_1;
 
 // timing:
 uint32_t lastButtonaction = 0;
-uint32_t buttonTimeoutInterval = 3000; // 3 seconds
+uint16_t buttonTimeoutInterval = 3000; // 3 seconds
+
+uint32_t lastStatemachineUpdate = 0;
+uint16_t statemachineUpdateInterval = 10; // update at 100Hz
 
 uint32_t lastBatteryMeasurement = 0;
-uint32_t batteryMeasurementInterval = 10000;    //10 seconds
+uint16_t batteryMeasurementInterval = 10000; // 10 seconds
+
+uint32_t lastLedUpdate = 0;
+uint16_t ledUpdateInterval = 10; // update at 100hz
 
 // colors:
+colorPalette currentActiveColor;
 colorPalette currentColor;
+colorPalette prevColor;
+uint16_t currentBrightness;
 
 byte chargerStatus = DISCONNECTED;
 byte prevChargerStatus;
 
-//battery:
-uint8_t batteryPercentage = 100;    //always assume full battery on startup
+// battery:
+uint8_t batteryPercentage = 100; // always assume full battery on startup
 
 void setup()
 {
-    //general setup:
+    // general setup:
     setCpuFrequencyMhz(80);
     delay(3000);
     Serial.begin(115200);
 
-    //setup Leds:
+    // setup Leds:
     setupLeds();
     updateLeds();
-    setDayColorPalette();
+    setColorPalette(DAY);
     currentColor = DAY;
+    currentActiveColor = DAY;
 
-    //setup BMS:
+    // setup BMS:
     prevChargerStatus = chargerStatus;
     setupBatterySystem();
 }
 
 void loop()
 {
-    // handle the state machine:
-    switch (state) {
-    case STANDBY:
-        if (prevState != state) {
+
+    if (millis() - lastStatemachineUpdate >= statemachineUpdateInterval) {
+        lastStatemachineUpdate = millis();
+
+        // update the charger status:
+        prevChargerStatus = chargerStatus;
+        chargerStatus = getChargerStatus();
+
+        // handle the state machine:
+        switch (state) {
+        case STANDBY:
             setBrighthness(0);
-            enableLedSupply(false);
-            updateLeds();
-            prevState = state;
-        }
-        if (topButton.input == SHORTPRESS) {
+            currentColor = currentActiveColor;
 
-            state = FULL_ON;
-            lastButtonaction = millis();
-            topButton.clearInput();
-        }
-        break;
-    case FULL_ON:
-        if (prevState != state) {
+            // change the lighting if the charger is connected:
+            if (chargerStatus != DISCONNECTED) {
+                if (chargerStatus == CONNECTED_CHARGING) {
+                    // show charging animation:
+                    currentColor = CHARGING;
+                    setBrighthness(10);
+
+                } else {
+                    // show charging done animation:
+                    currentColor = CHARGING_DONE;
+                    setBrighthness(10);
+                }
+            }
+
+            if (topButton.input == SHORTPRESS) {
+                state = FULL_ON;
+                lastButtonaction = millis();
+                topButton.clearInput();
+            }
+            break;
+        case FULL_ON:
             setBrighthness(0xFFF);
-            enableLedSupply(true);
-            updateLeds();
-            prevState = state;
-        }
-        if (topButton.input == SHORTPRESS) {
-            if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_40;
-            } else {
-                state = STANDBY;
+            currentColor = currentActiveColor;
+
+            if (topButton.input == SHORTPRESS) {
+                if (millis() - lastButtonaction < buttonTimeoutInterval) {
+                    state = LED_40;
+                } else {
+                    state = STANDBY;
+                }
+                lastButtonaction = millis();
+                topButton.clearInput();
             }
-            lastButtonaction = millis();
-            topButton.clearInput();
-        }
-        break;
-    case LED_40:
-        if (prevState != state) {
-            // setBrighthness(0xAAA);
+            break;
+        case LED_40:
             setBrighthness(0x666); // 40%
-            enableLedSupply(true);
-            updateLeds();
-            prevState = state;
-        }
-        if (topButton.input == SHORTPRESS) {
-            if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_10;
-            } else {
-                state = STANDBY;
+            currentColor = currentActiveColor;
+
+            if (topButton.input == SHORTPRESS) {
+                if (millis() - lastButtonaction < buttonTimeoutInterval) {
+                    state = LED_10;
+                } else {
+                    state = STANDBY;
+                }
+                lastButtonaction = millis();
+                topButton.clearInput();
             }
-            lastButtonaction = millis();
-            topButton.clearInput();
-        }
-        break;
-    case LED_10:
-        if (prevState != state) {
-            // setBrighthness(0x555);
+            break;
+        case LED_10:
             setBrighthness(0x199); // 10%
-            enableLedSupply(true);
-            updateLeds();
-            prevState = state;
-        }
-        if (topButton.input == SHORTPRESS) {
-            if (millis() - lastButtonaction < buttonTimeoutInterval) {
-                state = LED_1;
-            } else {
-                state = STANDBY;
+            currentColor = currentActiveColor;
+
+            if (topButton.input == SHORTPRESS) {
+                if (millis() - lastButtonaction < buttonTimeoutInterval) {
+                    state = LED_1;
+                } else {
+                    state = STANDBY;
+                }
+                lastButtonaction = millis();
+                topButton.clearInput();
             }
-            lastButtonaction = millis();
-            topButton.clearInput();
+            break;
+        case LED_1:
+            setBrighthness(0x28); // 1%;
+            currentColor = currentActiveColor;
+
+            if (topButton.input == SHORTPRESS) {
+                state = STANDBY;
+                lastButtonaction = millis();
+                topButton.clearInput();
+            }
+            break;
+
+        default:
+            break;
         }
-        break;
-    case LED_1:
-        if (prevState != state) {
-            setBrighthness(0x28); // 1%
-            enableLedSupply(true);
-            updateLeds();
+
+        // print the state changes:
+        if (state != prevState) {
+            Serial.println("going to state: " + String(state));
             prevState = state;
         }
-        if (topButton.input == SHORTPRESS) {
-
-            state = STANDBY;
-            lastButtonaction = millis();
-            topButton.clearInput();
-        }
-        break;
-
-    default:
-        break;
     }
 
-    //perform a battery level measurement
-    if(millis() - lastBatteryMeasurement>=batteryMeasurementInterval){
+    // periodically update the leds:
+    if (millis() - lastLedUpdate >= ledUpdateInterval) {
+        lastLedUpdate = millis();
+        // check if the color palette needs to be set:
+        if (prevColor != currentColor) {
+            setColorPalette(currentColor);
+            prevColor = currentColor;
+        }
+        updateLeds();
+    }
+
+    // perform a battery level measurement
+    if (millis() - lastBatteryMeasurement >= batteryMeasurementInterval) {
         lastBatteryMeasurement = millis();
         startBatteryMeasurement();
         Serial.println("started a battery measurement");
         Serial.flush();
     }
-    //update the battery level if a new measurment is ready
-    if(batteryMeasurementReady()){
+    // update the battery level if a new measurment is ready
+    if (batteryMeasurementReady()) {
         batteryPercentage = getBatteryPercentage();
         stopBatteryMeasurement();
-        Serial.println("Battery Percentage: "+String(batteryPercentage));
+        Serial.println("Battery Percentage: " + String(batteryPercentage));
+
+        chargerStatus = getChargerStatus();
+        Serial.println("charger status: " + String(chargerStatus));
     }
 
-
-
-
-    if (state != prevState) {
-        Serial.println("going to state: " + String(state));
-    }
-
-    // // functions that need to be updated periodically:
+    // update the button (needs to be done as often as possible)
     topButton.update();
 
     // check if the color palette needs to change:
     if (topButton.input == LONGPRESS) {
         if (currentColor == DAY) {
-            Serial.println("Going to Night Mode");
-            setNightColorPalette();
-            currentColor = NIGHT;
+            currentActiveColor = NIGHT;
         } else {
-            setDayColorPalette();
-            Serial.println("Going to Day Mode");
-            currentColor = DAY;
+            currentActiveColor = DAY;
         }
         lastButtonaction = millis();
-        updateLeds();
         topButton.clearInput();
     }
 }

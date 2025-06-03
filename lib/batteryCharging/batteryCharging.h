@@ -7,7 +7,7 @@
 #define NUM_BATTERY_READINGS 10 // always take the average of 10 reading
 
 #define FULL_SCALE_ADC_VOLTAGE 3.0
-#define VOLTAGE_DIVIDER_RATIO 2.3 // voltage is divided by two
+#define VOLTAGE_DIVIDER_RATIO 2.25 // voltage is divided by two. value is slightly increased to compensate for adc input impedance
 
 #define BATTERY_FULL_VOLTAGE 4.2
 #define BATTERY_EMPTY_VOLTAGE 3.2
