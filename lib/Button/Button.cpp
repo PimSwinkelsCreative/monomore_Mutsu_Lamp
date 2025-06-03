@@ -33,20 +33,13 @@ void Button::update() {
     // actions on buttonPress
     timePressed = millis();
     state = true;
-    Serial.println("button pressed!");
-
   } else if (lastReading && !reading) {
     // actions on button release:
     timeReleased = millis();
     state = false;
-     Serial.println("button released!");
     // check for a short click:
     if (timeReleased - timePressed < LONGPRESSTIME && !longButtonPressactive) {
       shortPressDetected = true;
-      Serial.println("Short press detected");
-      Serial.println("timeReleased: "+String(timeReleased));
-      Serial.println("timePressed: "+String(timePressed));
-      Serial.println("Button Press legth: "+String(timeReleased-timePressed)+"ms");
     }
     longButtonPressactive = false;
   }
@@ -56,7 +49,6 @@ void Button::update() {
       millis() - timeReleased > DOUBLECLICKINTERVAL) {
     input = SHORTPRESS;
     shortPressDetected = false;
-       Serial.println("button input set to short press");
   }
 
   uint32_t currentButtonPressLentgh = millis() - timePressed;
