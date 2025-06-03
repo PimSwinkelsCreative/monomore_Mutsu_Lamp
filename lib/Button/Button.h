@@ -14,7 +14,6 @@ class Button {
   byte pin;
   byte state;
   byte lastReading;
-  byte lastSample;
   unsigned long lastStateChange;
   unsigned long timePressed;
   unsigned long timeReleased;

@@ -12,34 +12,36 @@ void Button::init() {
 
 uint8_t Button::readButtonState() {
   uint8_t sample = !digitalRead(pin);  // button is low active
+  static byte lastSample = LOW;
+  byte btnState = state;
   if (sample != lastSample) {
     lastStateChange = millis();
     lastSample = sample;
   }
   if (millis() - lastStateChange > DEBOUNCETIME) {
-    return sample;
-  } else {
-    return state;  // bit dodgy, look for better solution
+    btnState = sample;  //set the btns state if the button is constant long enough
   }
+  return btnState;
 }
 
 void Button::update() {
   uint8_t reading = readButtonState();
+  static bool longButtonPressactive = false;
 
   // update the state:
   if (reading && !lastReading) {
     // actions on buttonPress
     timePressed = millis();
     state = true;
-
   } else if (lastReading && !reading) {
     // actions on button release:
     timeReleased = millis();
     state = false;
     // check for a short click:
-    if (timeReleased - timePressed < LONGPRESSTIME) {
+    if (timeReleased - timePressed < LONGPRESSTIME && !longButtonPressactive) {
       shortPressDetected = true;
     }
+    longButtonPressactive = false;
   }
 
   // set the short button press flag if required:
@@ -52,6 +54,7 @@ void Button::update() {
   uint32_t currentButtonPressLentgh = millis() - timePressed;
   if (state && currentButtonPressLentgh > DOUBLECLICKINTERVAL&& currentButtonPressLentgh<(millis() - timeReleased)) {
     input = LONGPRESS;
+    longButtonPressactive = true;
   }
 
   // detect the start of a doubleClick

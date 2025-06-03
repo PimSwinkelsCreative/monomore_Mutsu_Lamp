@@ -2,7 +2,7 @@
 
 #include "pinout.h"
 
-#define DEBUG_LED_MAPPING
+// #define DEBUG_LED_MAPPING
 
 // color palettes:
 // Day mode:
