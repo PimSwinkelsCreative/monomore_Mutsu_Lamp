@@ -1,5 +1,8 @@
 #include "ledcontrol.h"
 
+#include <math.h>
+#include "noise.h"
+
 #include "pinout.h"
 
 // #define DEBUG_LED_MAPPING
@@ -25,6 +28,8 @@ TLC5947 ledDriver(leds, sizeof(leds) / sizeof(leds[0]), LED_SCLK, LED_SIN, LED_L
 
 // stating:
 bool ledSupplyEnabled = false;
+animation currentAnimation = STATIC;
+colorPalette currentColorPalette;
 
 void setBrighthness(uint16_t brightness)
 {
@@ -57,18 +62,26 @@ void setColorPalette(byte palette)
     case DAY:
         setWhiteLedIntensity(dayWhiteLevel);
         setRGBWLedColor(dayRGBWColor);
+        currentAnimation = STATIC;
+        currentColorPalette = DAY;
         break;
     case NIGHT:
         setWhiteLedIntensity(nightWhiteLevel);
         setRGBWLedColor(nightRGBWColor);
+        currentAnimation = STATIC;
+        currentColorPalette = NIGHT;
         break;
     case CHARGING:
         setWhiteLedIntensity(0);
         setRGBWLedColor(RGBWColor16(4000, 0, 0, 0));
+        currentAnimation = CHARGE;
+        currentColorPalette = CHARGING;
         break;
     case CHARGING_DONE:
         setWhiteLedIntensity(0);
         setRGBWLedColor(RGBWColor16(0, 4000, 0, 0));
+        currentAnimation = CHARGE;
+        currentColorPalette = CHARGING_DONE;
         break;
 
     default:
@@ -93,17 +106,49 @@ void setRGBWLedColor(RGBWColor16 color)
     }
 }
 
+uint16_t applyBrightnessChargingAnimation(uint16_t fadeTime, uint16_t timeBetweenFades)
+{
+    uint16_t totalTime = fadeTime + timeBetweenFades;
+    uint16_t animationTime = millis() % totalTime;
+    uint16_t brightness;
+    if (animationTime < fadeTime / 2) {
+        brightness = map(animationTime, 0, fadeTime / 2, 0, maxBrightness);
+    } else if (animationTime < fadeTime) {
+        brightness = map(animationTime, fadeTime / 2, fadeTime, maxBrightness, 0);
+    } else {
+        brightness = 0;
+    }
+    return brightness;
+}
+
+uint16_t applyBrightnessGlowingAnimation(float speed, float depth)
+{
+    depth = constrain(depth,0,1);
+    speed = constrain(speed,0,1);
+    float x1 = float(speed*millis()/100.0);
+    float y1 = 10.0;
+    uint16_t brightness = float(maxBrightness)*(1-(PerlinNoise2(x1,y1,0.25,3)/2.0)*depth);
+    return brightness;
+}
+
 void updateLeds()
 {
+    uint16_t brightness = maxBrightness;
+    if (currentAnimation == CHARGE) {
+        brightness = applyBrightnessChargingAnimation(3000, 2000);
+    } else if(currentAnimation == GLOW){
+        brightness = applyBrightnessGlowingAnimation(0.9,0.9); 
+    }
+
     // copy all data to the global led array and scale the brightness:
     for (int i = 0; i < 4 * N_RGBWLEDS; i += 4) {
-        leds[rgbwLedPins[i]] = map(rgbwLeds[i / 4].r, 0, 0xFFF, 0, maxBrightness);
-        leds[rgbwLedPins[i + 1]] = map(rgbwLeds[i / 4].g, 0, 0xFFF, 0, maxBrightness);
-        leds[rgbwLedPins[i + 2]] = map(rgbwLeds[i / 4].b, 0, 0xFFF, 0, maxBrightness);
-        leds[rgbwLedPins[i + 3]] = map(rgbwLeds[i / 4].w, 0, 0xFFF, 0, maxBrightness);
+        leds[rgbwLedPins[i]] = map(rgbwLeds[i / 4].r, 0, 0xFFF, 0, brightness);
+        leds[rgbwLedPins[i + 1]] = map(rgbwLeds[i / 4].g, 0, 0xFFF, 0, brightness);
+        leds[rgbwLedPins[i + 2]] = map(rgbwLeds[i / 4].b, 0, 0xFFF, 0, brightness);
+        leds[rgbwLedPins[i + 3]] = map(rgbwLeds[i / 4].w, 0, 0xFFF, 0, brightness);
     }
     for (int i = 0; i < N_WHITE_LEDS; i++) {
-        leds[whiteLedPins[i]] = map(whiteLeds[i], 0, 0xFFF, 0, maxBrightness);
+        leds[whiteLedPins[i]] = map(whiteLeds[i], 0, 0xFFF, 0, brightness);
     }
 
 #ifdef DEBUG_LED_MAPPING
@@ -137,3 +182,4 @@ void enableLedSupply(bool enable)
     }
     ledSupplyEnabled = enable;
 }
+

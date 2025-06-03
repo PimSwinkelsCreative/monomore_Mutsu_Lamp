@@ -14,9 +14,9 @@ class Button {
   byte pin;
   byte state;
   byte lastReading;
-  unsigned long lastStateChange;
-  unsigned long timePressed;
-  unsigned long timeReleased;
+  uint64_t lastStateChange;
+  uint64_t timePressed;
+  uint64_t timeReleased;
   bool shortPressDetected;
   bool doubleClickStarted;
   uint8_t readButtonState();

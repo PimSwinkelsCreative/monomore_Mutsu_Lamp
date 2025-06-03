@@ -20,16 +20,16 @@ states state = STANDBY;
 states prevState = LED_1;
 
 // timing:
-uint32_t lastButtonaction = 0;
+uint64_t lastButtonaction = 0;
 uint16_t buttonTimeoutInterval = 3000; // 3 seconds
 
 uint32_t lastStatemachineUpdate = 0;
 uint16_t statemachineUpdateInterval = 10; // update at 100Hz
 
-uint32_t lastBatteryMeasurement = 0;
+uint64_t lastBatteryMeasurement = 0;
 uint16_t batteryMeasurementInterval = 10000; // 10 seconds
 
-uint32_t lastLedUpdate = 0;
+uint64_t lastLedUpdate = 0;
 uint16_t ledUpdateInterval = 10; // update at 100hz
 
 // colors:
@@ -84,12 +84,12 @@ void loop()
                 if (chargerStatus == CONNECTED_CHARGING) {
                     // show charging animation:
                     currentColor = CHARGING;
-                    setBrighthness(10);
+                    setBrighthness(20);
 
                 } else {
                     // show charging done animation:
                     currentColor = CHARGING_DONE;
-                    setBrighthness(10);
+                    setBrighthness(20);
                 }
             }
 
@@ -196,7 +196,7 @@ void loop()
 
     // check if the color palette needs to change:
     if (topButton.input == LONGPRESS) {
-        if (currentColor == DAY) {
+        if (currentActiveColor == DAY) {
             currentActiveColor = NIGHT;
         } else {
             currentActiveColor = DAY;
