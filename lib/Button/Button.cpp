@@ -12,34 +12,43 @@ void Button::init() {
 
 uint8_t Button::readButtonState() {
   uint8_t sample = !digitalRead(pin);  // button is low active
+  static byte lastSample = LOW;
+  byte btnState = state;
   if (sample != lastSample) {
     lastStateChange = millis();
     lastSample = sample;
   }
   if (millis() - lastStateChange > DEBOUNCETIME) {
-    return sample;
-  } else {
-    return state;  // bit dodgy, look for better solution
+    btnState = sample;  //set the btns state if the button is constant long enough
   }
+  return btnState;
 }
 
 void Button::update() {
   uint8_t reading = readButtonState();
+  static bool longButtonPressactive = false;
 
   // update the state:
   if (reading && !lastReading) {
     // actions on buttonPress
     timePressed = millis();
     state = true;
+    Serial.println("button pressed!");
 
   } else if (lastReading && !reading) {
     // actions on button release:
     timeReleased = millis();
     state = false;
+     Serial.println("button released!");
     // check for a short click:
-    if (timeReleased - timePressed < LONGPRESSTIME) {
+    if (timeReleased - timePressed < LONGPRESSTIME && !longButtonPressactive) {
       shortPressDetected = true;
+      Serial.println("Short press detected");
+      Serial.println("timeReleased: "+String(timeReleased));
+      Serial.println("timePressed: "+String(timePressed));
+      Serial.println("Button Press legth: "+String(timeReleased-timePressed)+"ms");
     }
+    longButtonPressactive = false;
   }
 
   // set the short button press flag if required:
@@ -47,11 +56,13 @@ void Button::update() {
       millis() - timeReleased > DOUBLECLICKINTERVAL) {
     input = SHORTPRESS;
     shortPressDetected = false;
+       Serial.println("button input set to short press");
   }
 
   uint32_t currentButtonPressLentgh = millis() - timePressed;
   if (state && currentButtonPressLentgh > DOUBLECLICKINTERVAL&& currentButtonPressLentgh<(millis() - timeReleased)) {
     input = LONGPRESS;
+    longButtonPressactive = true;
   }
 
   // detect the start of a doubleClick

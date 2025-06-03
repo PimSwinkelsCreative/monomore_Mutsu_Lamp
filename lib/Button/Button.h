@@ -5,7 +5,7 @@
 #define LONGPRESSTIME 2000
 #define DOUBLECLICKINTERVAL 200
 
-#define DEBOUNCETIME 10
+#define DEBOUNCETIME 50
 
 enum clickType { NONE, SHORTPRESS, LONGPRESS, DOUBLEPRESS };
 
@@ -14,7 +14,6 @@ class Button {
   byte pin;
   byte state;
   byte lastReading;
-  byte lastSample;
   unsigned long lastStateChange;
   unsigned long timePressed;
   unsigned long timeReleased;

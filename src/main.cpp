@@ -20,13 +20,14 @@ states prevState = LED_1;
 
 // timing:
 uint32_t lastButtonaction = 0;
-uint32_t buttonTimeoutInterval = 3000; // 10 seconds
+uint32_t buttonTimeoutInterval = 3000; // 3 seconds
 
 // colors:
 colorPalette currentColor;
 
 void setup()
 {
+    setCpuFrequencyMhz(80);
     delay(3000);
     Serial.begin(115200);
     setupLeds();
@@ -108,7 +109,6 @@ void loop()
         break;
     case LED_1:
         if (prevState != state) {
-            // setBrighthness(0x7A);
             setBrighthness(0x28);   //1%
             enableLedSupply(true);
             updateLeds();
