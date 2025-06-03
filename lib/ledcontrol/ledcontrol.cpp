@@ -23,10 +23,17 @@ uint16_t maxBrightness = 0xFFF;
 // The led array needs to be initialized prior to this object creation
 TLC5947 ledDriver(leds, sizeof(leds) / sizeof(leds[0]), LED_SCLK, LED_SIN, LED_LATCH, LED_BLANK);
 
+// stating:
+bool ledSupplyEnabled = false;
+
 void setBrighthness(uint16_t brightness)
 {
     maxBrightness = brightness;
-    updateLeds();
+    if (brightness == 0) {
+        enableLedSupply(false);
+    } else {
+        enableLedSupply(true);
+    }
 }
 
 void setupLeds()
@@ -44,16 +51,32 @@ void setupLeds()
     enableLedSupply(true);
 }
 
-void setDayColorPalette()
+void setColorPalette(byte palette)
 {
-    setWhiteLedIntensity(dayWhiteLevel);
-    setRGBWLedColor(dayRGBWColor);
-}
+    switch (palette) {
+    case DAY:
+        setWhiteLedIntensity(dayWhiteLevel);
+        setRGBWLedColor(dayRGBWColor);
+        break;
+    case NIGHT:
+        setWhiteLedIntensity(nightWhiteLevel);
+        setRGBWLedColor(nightRGBWColor);
+        break;
+    case CHARGING:
+        setWhiteLedIntensity(0);
+        setRGBWLedColor(RGBWColor16(4000, 0, 0, 0));
+        break;
+    case CHARGING_DONE:
+        setWhiteLedIntensity(0);
+        setRGBWLedColor(RGBWColor16(0, 4000, 0, 0));
+        break;
 
-void setNightColorPalette()
-{
-    setWhiteLedIntensity(nightWhiteLevel);
-    setRGBWLedColor(nightRGBWColor);
+    default:
+        // default to the day palette
+        setWhiteLedIntensity(dayWhiteLevel);
+        setRGBWLedColor(dayRGBWColor);
+        break;
+    }
 }
 
 void setWhiteLedIntensity(uint16_t intensity)
@@ -104,10 +127,13 @@ void updateLeds()
 
 void enableLedSupply(bool enable)
 {
+    if (ledSupplyEnabled == enable)
+        return;
     pinMode(PWR_EN, OUTPUT);
     if (enable) {
         digitalWrite(PWR_EN, HIGH);
     } else {
         digitalWrite(PWR_EN, LOW);
     }
+    ledSupplyEnabled = enable;
 }

@@ -10,6 +10,6 @@
 #define BAT 10
 #define BTN 13
 #define CHARGER_DETECT 21
-#define LED_CHRG_N
-#define LED_STDBY_N
+#define LED_CHRG_N 33
+#define LED_STDBY_N 34
 #define BAT_MEAS_EN 36
