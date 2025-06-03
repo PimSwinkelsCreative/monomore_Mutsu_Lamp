@@ -10,7 +10,7 @@ uint16_t dayWhiteLevel = 2000;
 RGBWColor16 dayRGBWColor = RGBWColor16(2000, 1000, 0, 3000);
 // night mode:
 uint16_t nightWhiteLevel = 100;
-RGBWColor16 nightRGBWColor = RGBWColor16(4095, 1000, 0, 500);
+RGBWColor16 nightRGBWColor = RGBWColor16(4095, 500, 0, 0);
 
 RGBWColor16 rgbwLeds[N_RGBWLEDS];
 uint16_t whiteLeds[N_WHITE_LEDS];
@@ -23,7 +23,7 @@ uint16_t maxBrightness = 0xFFF;
 // The led array needs to be initialized prior to this object creation
 TLC5947 ledDriver(leds, sizeof(leds) / sizeof(leds[0]), LED_SCLK, LED_SIN, LED_LATCH, LED_BLANK);
 
-void setBrighthess(uint16_t brightness)
+void setBrighthness(uint16_t brightness)
 {
     maxBrightness = brightness;
     updateLeds();

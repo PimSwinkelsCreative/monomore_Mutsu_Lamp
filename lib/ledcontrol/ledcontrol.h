@@ -17,7 +17,7 @@ void setNightColorPalette();
 
 void setDayColorPalette();
 
-void setBrighthess(uint16_t brightness);
+void setBrighthness(uint16_t brightness);
 
 void setWhiteLedIntensity(uint16_t intensity);
 
